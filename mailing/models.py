@@ -1,7 +1,6 @@
 from django.db import models
 from django.db.models import CharField, TextField, ForeignKey, DateTimeField, ManyToManyField
 
-from mailing.services import update_status
 from users.models import User
 
 
@@ -65,6 +64,7 @@ class Mailing(models.Model):
 
     def update_status(self):
         """Пересчитывает и сохраняет статус рассылки в БД"""
+        from mailing.services import update_status  # Импорт внутри метода для избежания циклического импорта
         new_status = update_status(self.start_time, self.end_time)
         if self.status != new_status:
             self.status = new_status

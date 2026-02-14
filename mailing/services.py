@@ -3,9 +3,6 @@ from datetime import datetime
 from django.conf import settings
 from django.core.mail import send_mail
 
-from mailing.models import Mailing, AttemptsMailing, Recipient
-from mailing.views import MailingListView
-
 
 def update_status(start_time, end_time):
     try:
@@ -25,6 +22,8 @@ def update_status(start_time, end_time):
 
 
 def start_mailing(mailing):
+    # Импорт внутри функции для избежания циклического импорта
+    from mailing.models import AttemptsMailing
 
     now = datetime.now()
 
