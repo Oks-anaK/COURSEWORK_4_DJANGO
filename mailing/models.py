@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import CharField, TextField, ForeignKey, DateTimeField, ManyToManyField
 
 from mailing.services import update_status
+from users.models import User
 
 
 class Recipient(models.Model):

@@ -1,0 +1,45 @@
+{% extends 'mailing/base.html' %}
+{% load my_tags %}
+{% block content %}
+<div class="album py-5 bg-body-tertiary">
+    <div class="container">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+            <div class="col">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <p class="card-text">{{ object.status }}</p>
+                        {% if object.category %}
+                        <p class="card-text">Сообщение: {{ object.message }}</p>
+                        <div class="mb-3">
+                            <a class="btn-outline-primary"
+                               href="{% url 'catalog:products_category' object.category.pk %}" role="button">Посмотреть
+                                товары этой категории</a>
+                        </div>
+                        {% endif %}
+                        <p class="card-text">{{ object.start_time }}</p>
+                        <p class="card-text">{{ object.end_time }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            {% if object.owner == user %}
+                            <div class="btn-group">
+                                <a class="btn btn-primary" href="{% url 'mailing:mailing_update' object.pk %}"
+                                   role="button">Редактировать</a>
+                            </div>
+                            {% endif %}
+                            {% if object.owner == user or perms.catalog.delete_product %}
+                            <div class="btn-group">
+                                <a class="btn btn-danger" href="{% url 'mailing:mailing_delete' object.pk %}"
+                                   role="button">Удалить</a>
+                            </div>
+                            {% endif %}
+                            <div class="btn-group">
+                                <a class="btn btn-primary" href="{% url 'mailing:mailing_list' %}"
+                                   role="button">Назад</a>
+                            </div>
+                            <small class="text-body-secondary"></small></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
