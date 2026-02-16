@@ -32,6 +32,20 @@ class User(AbstractUser):
         verbose_name="Аватар",
         help_text="Добавьте свое фото.",
     )
+    phone = CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        verbose_name="Номер телефона",
+        help_text="Введите номер телефона.",
+    )
+    country = CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Страна",
+        help_text="Введите страну.",
+    )
     token = CharField(
         max_length=100,
         blank=True,
