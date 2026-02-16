@@ -1,6 +1,6 @@
 from django.forms import ModelForm
 
-from mailing.models import Mailing, Message, Recipient, AttemptsMailing
+from mailing.models import Attempt, Mailing, Message, Recipient
 
 
 class MailingForm(ModelForm):
@@ -18,10 +18,4 @@ class MessageForm(ModelForm):
 class RecipientForm(ModelForm):
     class Meta:
         model = Recipient
-        fields = "__all__"
-
-
-class AttemptsMailingForm(ModelForm):
-    class Meta:
-        model = AttemptsMailing
         fields = "__all__"

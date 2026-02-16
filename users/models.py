@@ -19,7 +19,12 @@ class User(AbstractUser):
         null=True,
         help_text="Введите фамилию.",
     )
-    email = CharField(max_length=150, verbose_name="Email", help_text="Введите ваш email.", unique=True)
+    email = CharField(
+        max_length=150,
+        verbose_name="Email",
+        help_text="Введите ваш email.",
+        unique=True,
+    )
     avatar = ImageField(
         upload_to="users/avatars",
         blank=True,
@@ -27,8 +32,16 @@ class User(AbstractUser):
         verbose_name="Аватар",
         help_text="Добавьте свое фото.",
     )
+    token = CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Токен подтверждения",
+        help_text="Токен для подтверждения email.",
+        unique=True,
+    )
 
-    USERNAME_FIELD = ("email",)
+    USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
     def __str__(self):

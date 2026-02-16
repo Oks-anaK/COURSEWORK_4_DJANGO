@@ -8,13 +8,11 @@
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <p class="card-text">{{ object.status }}</p>
-                        {% if object.category %}
+                        {% if object.message %}
                         <p class="card-text">Сообщение: {{ object.message }}</p>
-                        <div class="mb-3">
-                            <a class="btn-outline-primary"
-                               href="{% url 'catalog:products_category' object.category.pk %}" role="button">Посмотреть
-                                товары этой категории</a>
-                        </div>
+                        {% endif %}
+                        {% if object.recipients %}
+                        <p class="card-text">Получатели: {{ object.recipients }}</p>
                         {% endif %}
                         <p class="card-text">{{ object.start_time }}</p>
                         <p class="card-text">{{ object.end_time }}</p>
@@ -25,7 +23,7 @@
                                    role="button">Редактировать</a>
                             </div>
                             {% endif %}
-                            {% if object.owner == user or perms.catalog.delete_product %}
+                            {% if object.owner == user %}
                             <div class="btn-group">
                                 <a class="btn btn-danger" href="{% url 'mailing:mailing_delete' object.pk %}"
                                    role="button">Удалить</a>
@@ -36,6 +34,30 @@
                                    role="button">Назад</a>
                             </div>
                             <small class="text-body-secondary"></small></div>
+                        <h3>История попыток отправки</h3>
+                        {% for attempt in attempts %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>Дата:</strong> {{ attempt.attempt_time|date:"d.m.Y H:i:s" }}<br>
+                                        <strong>Статус:</strong>
+                                        <span class="badge {% if attempt.status == 'Успешно' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ attempt.status }}
+                                        </span>
+                                    </div>
+                                </div>
+                                {% if attempt.server_response %}
+                                <div class="mt-2">
+                                    <strong>Ответ сервера:</strong>
+                                    <pre class="bg-light p-2 rounded"><small>{{ attempt.server_response }}</small></pre>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">Попыток отправки пока нет</p>
+                        {% endfor %}
                     </div>
                 </div>
             </div>

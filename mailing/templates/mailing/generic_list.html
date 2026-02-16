@@ -1,0 +1,62 @@
+{% extends 'mailing/base.html' %}
+{% load my_tags %}
+
+{% block content %}
+<div class="album py-5 bg-body-tertiary">
+    <div class="container">
+        <div class="row row-cols-1 row-col">
+            {% for object in object_list %}
+                <div class="col">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                {% if object.subject %}
+                                    {{ object.subject }}  {# Для Message #}
+                                {% elif object.email %}
+                                    {{ object.full_name }} ({{ object.email }})  {# Для Recipient #}
+                                {% else %}
+                                    {{ object }}  {# Для Mailing или общий fallback #}
+                                {% endif %}
+                            </h5>
+
+                            <p class="card-text">
+                                {% if object.body %}
+                                    {{ object.body|truncatewords:20 }}  {# Для Message #}
+                                {% elif object.comment %}
+                                    {{ object.comment|truncatewords:20 }}  {# Для Recipient #}
+                                {% elif object.message %}
+                                    Сообщение: {{ object.message.subject }}  {# Для Mailing #}
+                                {% endif %}
+                            </p>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <a href="{% url view_name|add:'_detail' object.pk %}"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        Просмотр
+                                    </a>
+
+                                    {% if object.owner == user %}
+                                        <a href="{% url view_name|add:'_update' object.pk %}"
+                                           class="btn btn-sm btn-outline-secondary">
+                                            Редактировать
+                                        </a>
+                                        <a href="{% url view_name|add:'_delete' object.pk %}"
+                                           class="btn btn-sm btn-outline-danger">
+                                            Удалить
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col">
+                    <p class="text-center">Список пуст</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

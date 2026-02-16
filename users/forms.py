@@ -1,5 +1,5 @@
 from django.contrib.auth.forms import UserCreationForm
-from django.forms import ModelForm, BooleanField, CheckboxInput, FileInput
+from django.forms import BooleanField, CheckboxInput, FileInput, ModelForm
 
 from users.models import User
 

@@ -10,6 +10,9 @@ python = "^3.13"
 django = "^6.0.1"
 python-dotenv = "^1.2.1"
 psycopg2-binary = "^2.9.11"
+black = "^26.1.0"
+isort = "^7.0.0"
+pillow = "^12.1.1"
 
 
 [build-system]

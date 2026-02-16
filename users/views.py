@@ -1,9 +1,12 @@
 import secrets
 
+from django.contrib import messages
 from django.core.mail import send_mail
-from django.urls import reverse_lazy
-from django.views.generic import DetailView, CreateView, UpdateView, DeleteView
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse, reverse_lazy
+from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
 
+from config.settings import EMAIL_HOST_USER
 from users.forms import UserRegisterForm, UserUpdateForm
 from users.models import User
 
@@ -39,10 +42,15 @@ class UserCreateView(CreateView):
 
 
 def email_verification(request, token):
-    user = get_object_or_404(User, token=token)
-    user.is_active = True
-    user.save()
-    return redirect(reverse("users:login"))
+    try:
+        user = User.objects.get(token=token)
+        user.is_active = True
+        user.token = None
+        user.save()
+        return render(request, "users/registration/email_confirm.html")
+    except User.DoesNotExist:
+        messages.error(request, "Токен не найден или уже использован. Пожалуйста, зарегистрируйтесь заново.")
+        return redirect(reverse("users:register"))
 
 
 class UserUpdateView(UpdateView):
@@ -56,6 +64,9 @@ class UserUpdateView(UpdateView):
 
 class UserDeleteView(DeleteView):
     model = User
+
+    def get_object(self, queryset=None):
+        return self.request.user
 
 
 

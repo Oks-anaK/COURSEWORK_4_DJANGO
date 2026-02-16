@@ -1,0 +1,24 @@
+{% extends 'mailing/base.html' %}
+{% load my_tags %}
+{% block content %}
+<div class="album py-5 bg-body-tertiary">
+    <div class="container">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+            <div class="col">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <p class="card-text">Общее количество всех созданных рассылок: {{ attempts_count }}</p>
+                        <p class="card-text">Количество активных рассылок: {{ attempts_active }}</p>
+                        <p class="card-text">Количество уникальных получателей: {{ recipients_unique }}</p>
+                            <div class="btn-group">
+                                <a class="btn btn-primary" href="{% url 'mailing:mailing_list' %}"
+                                   role="button">Назад</a>
+                            </div>
+                            <small class="text-body-secondary"></small></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

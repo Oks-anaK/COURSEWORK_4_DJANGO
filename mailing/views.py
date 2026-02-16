@@ -1,13 +1,29 @@
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.utils import timezone
+from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
+                                  TemplateView, UpdateView)
 
-from .forms import MailingForm, MessageForm, RecipientForm, AttemptsMailingForm
-from .models import Mailing, Message, Recipient, AttemptsMailing
+from .forms import MailingForm, MessageForm, RecipientForm
+from .models import Attempt, Mailing, Message, Recipient
+
+
+class HomeView(TemplateView):
+    template_name = "mailing/home.html"
+
+    def get_context_data(self, **kwargs):
+        now = timezone.now()
+        context = super().get_context_data(**kwargs)
+        context["attempts_count"] = Mailing.objects.all().count()
+        context["attempts_active"] = Mailing.objects.filter(
+            status='Запущена', start_time__lte=now, end_time__gte=now
+        ).count()
+        context["recipients_unique"] = Recipient.objects.distinct().count()
+        return context
 
 
 class MailingListView(ListView):
     model = Mailing
     form_class = MailingForm
-    template_name = 'mailing/mailing_list.html'
+    template_name = "mailing/generic_list.html"
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -20,117 +36,110 @@ class MailingListView(ListView):
 class MailingDetailView(DetailView):
     model = Mailing
     form_class = MailingForm
-    template_name = 'mailing/mailing_detail.html'
+    template_name = "mailing/mailing_detail.html"
 
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
         obj.update_status()  # пересчёт и сохранение статуса
         return obj
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["attempts"] = self.object.attempts.all().order_by("-attempt_time")
+        return context
+
 
 class MailingCreateView(CreateView):
     model = Mailing
     form_class = MailingForm
-    template_name = 'mailing/mailing_create.html'
+    template_name = "mailing/generic_form.html"
+
+    def form_valid(self, form):
+        mailing = form.save(commit=False)
+        mailing.owner = self.request.user
+        mailing.save()
+        return super().form_valid(form)
 
 
 class MailingUpdateView(UpdateView):
     model = Mailing
     form_class = MailingForm
-    template_name = 'mailing/mailing_update.html'
+    template_name = "mailing/generic_form.html"
 
 
 class MailingDeleteView(DeleteView):
     model = Mailing
     form_class = MailingForm
-    template_name = 'mailing/mailing_delete.html'
+    template_name = "mailing/generic_confirm_delete.html"
 
 
 class MessageCreateView(CreateView):
     model = Message
     form_class = MessageForm
-    template_name = 'mailing/message_create.html'
+    template_name = "mailing/generic_form.html"
+
+    def form_valid(self, form):
+        message = form.save(commit=False)
+        message.owner = self.request.user
+        message.save()
+        return super().form_valid(form)
 
 
 class MessageUpdateView(UpdateView):
     model = Message
     form_class = MessageForm
-    template_name = 'mailing/message_update.html'
+    template_name = "mailing/generic_form.html"
 
 
 class MessageListView(ListView):
     model = Message
     form_class = MessageForm
-    template_name = 'mailing/message_list.html'
+    template_name = "mailing/generic_list.html"
 
 
 class MessageDetailView(DetailView):
     model = Message
     form_class = MessageForm
-    template_name = 'mailing/message_detail.html'
+    template_name = "mailing/message_detail.html"
 
 
 class MessageDeleteView(DeleteView):
     model = Message
     form_class = MessageForm
-    template_name = 'mailing/message_delete.html'
+    template_name = "mailing/generic_confirm_delete.html"
 
 
 class RecipientCreateView(CreateView):
     model = Recipient
     form_class = RecipientForm
-    template_name = 'mailing/recipient_create.html'
+    template_name = "mailing/generic_form.html"
+
+    def form_valid(self, form):
+        recipient = form.save(commit=False)
+        recipient.owner = self.request.user
+        recipient.save()
+        return super().form_valid(form)
 
 
 class RecipientUpdateView(UpdateView):
     model = Recipient
     form_class = RecipientForm
-    template_name = 'mailing/recipient_update.html'
+    template_name = "mailing/generic_form.html"
 
 
 class RecipientListView(ListView):
     model = Recipient
     form_class = RecipientForm
-    template_name = 'mailing/recipient_list.html'
+    template_name = "mailing/generic_list.html"
 
 
 class RecipientDetailView(DetailView):
     model = Recipient
     form_class = RecipientForm
-    template_name = 'mailing/recipient_detail.html'
+    template_name = "mailing/recipient_detail.html"
 
 
 class RecipientDeleteView(DeleteView):
     model = Recipient
     form_class = RecipientForm
-    template_name = 'mailing/recipient_delete.html'
-
-
-class AttemptsMailingCreateView(CreateView):
-    model = AttemptsMailing
-    form_class = AttemptsMailingForm
-    template_name = 'mailing/attempts_create.html'
-
-
-class AttemptsMailingUpdateView(UpdateView):
-    model = AttemptsMailing
-    form_class = AttemptsMailingForm
-    template_name = 'mailing/attempts_update.html'
-
-
-class AttemptsMailingDeleteView(DeleteView):
-    model = AttemptsMailing
-    form_class = AttemptsMailingForm
-    template_name = 'mailing/attempts_delete.html'
-
-
-class AttemptsMailingListView(ListView):
-    model = AttemptsMailing
-    form_class = AttemptsMailingForm
-    template_name = 'mailing/attempts_list.html'
-
-
-class AttemptsMailingDetailView(DetailView):
-    model = AttemptsMailing
-    form_class = AttemptsMailingForm
-    template_name = 'mailing/attempts_detail.html'
+    template_name = "mailing/generic_confirm_delete.html"

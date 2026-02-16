@@ -12,18 +12,18 @@ def update_status(start_time, end_time):
         now = datetime.now()
 
         if now < start_time:
-            return 'Создана'
+            return "Создана"
         elif start_time <= now <= end_time:
-            return 'Запущена'
+            return "Запущена"
         else:  # now > end_time
-            return 'Завершена'
+            return "Завершена"
     except Exception as e:
         print(f"Что-то пошло не так: {e}.")
 
 
 def start_mailing(mailing):
     # Импорт внутри функции для избежания циклического импорта
-    from mailing.models import AttemptsMailing
+    from mailing.models import Attempt
 
     now = datetime.now()
 
@@ -46,26 +46,17 @@ def start_mailing(mailing):
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[recipient.email],
                 fail_silently=False,
-
             )
 
-            AttemptsMailing.objects.create(
+            Attempt.objects.create(
                 mailing=mailing,
-                status='Успешно',
-                server_response='Письмо успешно отправлено'
+                status="Успешно",
+                server_response="Письмо успешно отправлено",
             )
 
         except Exception as e:
-            AttemptsMailing.objects.create(
+            Attempt.objects.create(
                 mailing=mailing,
-                status='Не успешно',
-                server_response=f"Произошла ошибка при отправке: {str(e)}"
+                status="Не успешно",
+                server_response=f"Произошла ошибка при отправке: {str(e)}",
             )
-
-
-
-
-
-
-
-
