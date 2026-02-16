@@ -10,6 +10,8 @@
                     <li><a href="{% url 'mailing:mailing_list' %}" class="text-white">Главная</a></li>
                     {% if user.is_authenticated %}
                     <li><a href="{% url 'mailing:statistics' %}" class="text-white">Статистика</a></li>
+                    <li><a href="{% url 'mailing:message_list' %}" class="text-white">Сообщения</a></li>
+                    <li><a href="{% url 'mailing:recipient_list' %}" class="text-white">Получатели</a></li>
                     {% if user.groups.all.0.name == 'Менеджеры' %}
                     <li><a href="{% url 'users:user_list' %}" class="text-white">Список пользователей</a></li>
                     {% endif %}

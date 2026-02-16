@@ -68,6 +68,7 @@ class UserUpdateView(UpdateView):
 
 class UserDeleteView(DeleteView):
     model = User
+    success_url = reverse_lazy('mailing:home')
 
     def get_object(self, queryset=None):
         return self.request.user

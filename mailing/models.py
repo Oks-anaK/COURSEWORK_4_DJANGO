@@ -5,9 +5,11 @@ from users.models import User
 
 
 class Recipient(models.Model):
-    username = CharField(max_length=150, verbose_name="ФИО", help_text="Введите ваши ФИО.")
+    username = CharField(max_length=150, verbose_name="ФИО", help_text="Введите ваши ФИО.", blank=True,
+        null=True)
     email = CharField(max_length=150, verbose_name="Email", help_text="Введите ваш email.", unique=True)
-    comment = TextField(verbose_name="Комментарий", help_text="Введите ваш комментарий.")
+    comment = TextField(verbose_name="Комментарий", help_text="Введите ваш комментарий.", blank=True,
+        null=True)
 
     owner = models.ForeignKey(
         User,
@@ -19,7 +21,9 @@ class Recipient(models.Model):
     )
 
     def __str__(self):
-        return f"{self.username} - {self.email}"
+        if self.username:
+            return f"{self.username} ({self.email})"
+        return self.email
 
     class Meta:
         verbose_name = "Получатель рассылки"
@@ -60,6 +64,7 @@ class Mailing(models.Model):
         max_length=50,
         verbose_name="Статус",
         blank=True,
+        null=True,
         default='Создана'
     )
     message = ForeignKey(Message,

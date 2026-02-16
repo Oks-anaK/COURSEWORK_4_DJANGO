@@ -4,6 +4,23 @@
 {% block content %}
 <div class="album py-5 bg-body-tertiary">
     <div class="container">
+        {% if create_url %}
+        <div class="row mb-3">
+            <div class="col">
+                <a href="{% url create_url %}" class="btn btn-primary">
+                    {% if view_name == 'mailing:message' %}
+                        Создать сообщение
+                    {% elif view_name == 'mailing:recipient' %}
+                        Создать получателя
+                    {% elif view_name == 'mailing:mailing' %}
+                        Создать рассылку
+                    {% else %}
+                        Создать
+                    {% endif %}
+                </a>
+            </div>
+        </div>
+        {% endif %}
         <div class="row row-cols-1 row-col">
             {% for object in object_list %}
                 <div class="col">
@@ -14,8 +31,10 @@
                                     {{ object.subject }}  {# Для Message #}
                                 {% elif object.email %}
                                     {{ object.full_name }} ({{ object.email }})  {# Для Recipient #}
+                                {% elif object.message %}
+                                    {{ object.message.subject }}  {# Для Mailing - показываем тему сообщения #}
                                 {% else %}
-                                    {{ object }}  {# Для Mailing или общий fallback #}
+                                    Рассылка #{{ object.pk }}  {# Для Mailing без сообщения #}
                                 {% endif %}
                             </h5>
 
@@ -25,7 +44,13 @@
                                 {% elif object.comment %}
                                     {{ object.comment|truncatewords:20 }}  {# Для Recipient #}
                                 {% elif object.message %}
-                                    Сообщение: {{ object.message.subject }}  {# Для Mailing #}
+                                    <strong>Статус:</strong> {{ object.status|default:"Не указан" }}<br>
+                                    <strong>Сообщение:</strong> {{ object.message.subject }}<br>
+                                    {% if object.recipients.all %}
+                                        <strong>Получателей:</strong> {{ object.recipients.all|length }}
+                                    {% else %}
+                                        <strong>Получателей:</strong> 0
+                                    {% endif %}
                                 {% endif %}
                             </p>
 

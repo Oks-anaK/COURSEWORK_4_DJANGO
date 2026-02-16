@@ -100,13 +100,21 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "ru-ru"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Moscow"
 
 USE_I18N = True
 
 USE_TZ = True
+
+# Формат даты и времени для форм
+DATETIME_INPUT_FORMATS = [
+    '%Y-%m-%dT%H:%M',  # Формат для datetime-local
+    '%Y-%m-%d %H:%M:%S',
+    '%Y-%m-%d %H:%M',
+    '%d.%m.%Y %H:%M',
+]
 
 
 # Static files (CSS, JavaScript, Images)
@@ -141,7 +149,7 @@ SERVER_EMAIL = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Cache
-CACHE_ENABLED = True
+CACHE_ENABLED = os.getenv("CACHE_ENABLED", "False") == "True"
 if CACHE_ENABLED:
     CACHES = {
         "default": {
@@ -150,3 +158,4 @@ if CACHE_ENABLED:
             "KEY_PREFIX": "coursework_4_",
         }
     }
+    
