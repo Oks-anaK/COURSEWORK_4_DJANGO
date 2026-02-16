@@ -8,13 +8,15 @@ from mailing.views import (HomeView, MailingCreateView,
                            MessageDetailView, MessageUpdateView,
                            RecipientCreateView, RecipientDeleteView,
                            RecipientDetailView, RecipientListView,
-                           RecipientUpdateView)
+                           RecipientUpdateView, StatisticsView)
 
 app_name = MailingConfig.name
 
 urlpatterns = [
     # Main_page
     path("", HomeView.as_view(), name="home"),
+    # Statistics
+    path("statistics/", StatisticsView.as_view(), name="statistics"),
     # Mailings
     path("list/", MailingListView.as_view(), name="mailing_list"),
     path("<int:pk>/", MailingDetailView.as_view(), name="mailing_detail"),

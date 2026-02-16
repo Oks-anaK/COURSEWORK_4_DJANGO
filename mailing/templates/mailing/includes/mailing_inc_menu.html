@@ -9,6 +9,10 @@
                 <ul class="list-unstyled">
                     <li><a href="{% url 'mailing:mailing_list' %}" class="text-white">Главная</a></li>
                     {% if user.is_authenticated %}
+                    <li><a href="{% url 'mailing:statistics' %}" class="text-white">Статистика</a></li>
+                    {% if user.groups.all.0.name == 'Менеджеры' %}
+                    <li><a href="{% url 'users:user_list' %}" class="text-white">Список пользователей</a></li>
+                    {% endif %}
                     <li>
                         <form method="post" action="{% url 'users:logout' %}" style="display: inline;">
                             {% csrf_token %}

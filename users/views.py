@@ -1,10 +1,14 @@
 import secrets
 
 from django.contrib import messages
+from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
+from django.core.cache import cache
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
+from django.utils.cache import patch_response_headers
+from django.views import View
+from django.views.generic import CreateView, DeleteView, DetailView, UpdateView, ListView
 
 from config.settings import EMAIL_HOST_USER
 from users.forms import UserRegisterForm, UserUpdateForm
@@ -67,6 +71,34 @@ class UserDeleteView(DeleteView):
 
     def get_object(self, queryset=None):
         return self.request.user
+
+
+class UserListView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
+    model = User
+    template_name = "users/user_list.html"
+    permission_required = 'users.can_view_user_list'
+
+    def get_queryset(self):
+        return User.objects.all().order_by('email')
+    
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if request.method == 'GET':
+            patch_response_headers(response, cache_timeout=900)  # 15 минут
+        return response
+
+
+class UserBlockView(PermissionRequiredMixin, LoginRequiredMixin, View):
+    permission_required = 'users.can_block_users'
+
+    def post(self, request, pk):
+        user_obj = get_object_or_404(User, pk=pk)
+        user_obj.is_active = not user_obj.is_active
+        user_obj.save()
+
+        action = "разблокирован" if user_obj.is_active else "заблокирован"
+        messages.success(request, f'Пользователь {user_obj.email} {action}')
+        return redirect('users:user_list')
 
 
 

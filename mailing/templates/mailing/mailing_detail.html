@@ -29,6 +29,14 @@
                                    role="button">Удалить</a>
                             </div>
                             {% endif %}
+                            {% if is_manager and object.owner != user %}
+                            <div class="btn-group">
+                                <form method="post" action="{% url 'mailing:mailing_disable' object.pk %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-warning">Отключить рассылку</button>
+                                </form>
+                            </div>
+                            {% endif %}
                             <div class="btn-group">
                                 <a class="btn btn-primary" href="{% url 'mailing:mailing_list' %}"
                                    role="button">Назад</a>
