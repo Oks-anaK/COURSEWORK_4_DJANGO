@@ -1,14 +1,16 @@
 import secrets
 
 from django.contrib import messages
-from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
+from django.contrib.auth.mixins import (LoginRequiredMixin,
+                                        PermissionRequiredMixin)
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.cache import patch_response_headers
 from django.views import View
-from django.views.generic import CreateView, DeleteView, DetailView, UpdateView, ListView
+from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
+                                  UpdateView)
 
 from config.settings import EMAIL_HOST_USER
 from users.forms import UserRegisterForm, UserUpdateForm
@@ -53,7 +55,10 @@ def email_verification(request, token):
         user.save()
         return render(request, "users/registration/email_confirm.html")
     except User.DoesNotExist:
-        messages.error(request, "Токен не найден или уже использован. Пожалуйста, зарегистрируйтесь заново.")
+        messages.error(
+            request,
+            "Токен не найден или уже использован. Пожалуйста, зарегистрируйтесь заново.",
+        )
         return redirect(reverse("users:register"))
 
 
@@ -68,7 +73,7 @@ class UserUpdateView(UpdateView):
 
 class UserDeleteView(DeleteView):
     model = User
-    success_url = reverse_lazy('mailing:home')
+    success_url = reverse_lazy("mailing:home")
 
     def get_object(self, queryset=None):
         return self.request.user
@@ -77,20 +82,20 @@ class UserDeleteView(DeleteView):
 class UserListView(PermissionRequiredMixin, LoginRequiredMixin, ListView):
     model = User
     template_name = "users/user_list.html"
-    permission_required = 'users.can_view_user_list'
+    permission_required = "users.can_view_user_list"
 
     def get_queryset(self):
-        return User.objects.all().order_by('email')
-    
+        return User.objects.all().order_by("email")
+
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
-        if request.method == 'GET':
+        if request.method == "GET":
             patch_response_headers(response, cache_timeout=900)  # 15 минут
         return response
 
 
 class UserBlockView(PermissionRequiredMixin, LoginRequiredMixin, View):
-    permission_required = 'users.can_block_users'
+    permission_required = "users.can_block_users"
 
     def post(self, request, pk):
         user_obj = get_object_or_404(User, pk=pk)
@@ -98,8 +103,5 @@ class UserBlockView(PermissionRequiredMixin, LoginRequiredMixin, View):
         user_obj.save()
 
         action = "разблокирован" if user_obj.is_active else "заблокирован"
-        messages.success(request, f'Пользователь {user_obj.email} {action}')
-        return redirect('users:user_list')
-
-
-
+        messages.success(request, f"Пользователь {user_obj.email} {action}")
+        return redirect("users:user_list")

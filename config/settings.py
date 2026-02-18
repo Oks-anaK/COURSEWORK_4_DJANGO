@@ -110,10 +110,10 @@ USE_TZ = True
 
 # Формат даты и времени для форм
 DATETIME_INPUT_FORMATS = [
-    '%Y-%m-%dT%H:%M',  # Формат для datetime-local
-    '%Y-%m-%d %H:%M:%S',
-    '%Y-%m-%d %H:%M',
-    '%d.%m.%Y %H:%M',
+    "%Y-%m-%dT%H:%M",  # Формат для datetime-local
+    "%Y-%m-%d %H:%M:%S",
+    "%Y-%m-%d %H:%M",
+    "%d.%m.%Y %H:%M",
 ]
 
 
@@ -122,7 +122,7 @@ DATETIME_INPUT_FORMATS = [
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',
+    BASE_DIR / "static",
 ]
 
 # Media
@@ -137,7 +137,7 @@ LOGOUT_REDIRECT_URL = "mailing:home"
 LOGIN_URL = "users:login"
 
 # Email
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = os.getenv("EMAIL_HOST")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", 465))
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
@@ -158,4 +158,3 @@ if CACHE_ENABLED:
             "KEY_PREFIX": "coursework_4_",
         }
     }
-    

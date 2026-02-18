@@ -1,7 +1,8 @@
+from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import BaseCommand
-from django.contrib.auth.models import Group, Permission
-from mailing.models import Mailing, Recipient, Message
+
+from mailing.models import Mailing, Message, Recipient
 from users.models import User
 
 
