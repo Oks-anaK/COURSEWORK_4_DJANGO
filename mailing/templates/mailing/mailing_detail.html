@@ -5,7 +5,7 @@
     <div class="container">
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
             <div class="col">
-                <div class="card shadow-sm">
+                <div class="card shadow-sm" style="background-color: #e3f2fd;">
                     <div class="card-body">
                         <h5>Информация</h5>
                         <p class="card-text">Статус: {{ object.status|default:"Не указан" }}</p>
@@ -55,7 +55,7 @@
                         </div>
                         <h5>История попыток отправки</h5>
                         {% for attempt in attempts %}
-                        <div class="card mb-3">
+                        <div class="card mb-3" style="background-color: #e3f2fd;">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>

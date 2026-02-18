@@ -3,18 +3,27 @@
 {% block content %}
 <div class="album py-5 bg-body-tertiary">
     <div class="container">
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+        <div class="row mb-4">
             <div class="col">
-                <div class="card shadow-sm">
+                <h1 class="text-center">Главная</h1>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <div class="card shadow-sm" style="background-color: #e3f2fd;">
                     <div class="card-body">
-                        <p class="card-text">Общее количество всех созданных рассылок: {{ attempts_count }}</p>
-                        <p class="card-text">Количество активных рассылок: {{ attempts_active }}</p>
-                        <p class="card-text">Количество уникальных получателей: {{ recipients_unique }}</p>
-                            <div class="btn-group">
-                                <a class="btn btn-primary" href="{% url 'mailing:mailing_list' %}"
-                                   role="button">Назад</a>
-                            </div>
-                            <small class="text-body-secondary"></small></div>
+                        <h5 class="card-title mb-3">Статистика</h5>
+                        <p class="card-text">
+                            Общее количество всех созданных рассылок: <strong class="text-primary">{{ attempts_count }}</strong><br>
+                            Количество активных рассылок: <strong class="text-primary">{{ attempts_active }}</strong><br>
+                            Количество уникальных получателей: <strong class="text-primary">{{ recipients_unique }}</strong>
+                        </p>
+                        {% if user.is_authenticated %}
+                        <div class="btn-group mt-3 d-flex justify-content-center">
+                            <a class="btn btn-primary" href="{% url 'mailing:mailing_list' %}"
+                               role="button">Список рассылок</a>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

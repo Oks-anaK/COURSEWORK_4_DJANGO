@@ -1,46 +1,10 @@
 from django import forms
 from django.forms import ModelForm
 
-from mailing.models import Attempt, Mailing, Message, Recipient
+from mailing.models import Mailing, Message, Recipient
 
 
 class MailingForm(ModelForm):
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop("user", None)
-        super().__init__(*args, **kwargs)
-
-        # Настраиваем queryset для поля recipients
-        if user:
-            is_manager = user.groups.filter(name="Менеджеры").exists()
-            if is_manager:
-                # Менеджеры видят всех получателей
-                self.fields["recipients"].queryset = Recipient.objects.all().order_by(
-                    "username", "email"
-                )
-            else:
-                # Обычные пользователи видят только своих получателей
-                self.fields["recipients"].queryset = Recipient.objects.filter(
-                    owner=user
-                ).order_by("username", "email")
-            # Улучшаем отображение поля recipients
-            self.fields["recipients"].widget.attrs.update(
-                {"class": "form-control", "size": "10"}
-            )
-
-        # Настраиваем queryset для поля message
-        if user:
-            is_manager = user.groups.filter(name="Менеджеры").exists()
-            if is_manager:
-                # Менеджеры видят все сообщения
-                self.fields["message"].queryset = Message.objects.all().order_by(
-                    "subject"
-                )
-            else:
-                # Обычные пользователи видят только свои сообщения
-                self.fields["message"].queryset = Message.objects.filter(
-                    owner=user
-                ).order_by("subject")
-
     start_time = forms.DateTimeField(
         label="Дата и время начала отправки",
         widget=forms.DateTimeInput(
@@ -61,71 +25,30 @@ class MailingForm(ModelForm):
         help_text="Укажите дату и время окончания отправки.",
     )
 
-    # Поля для создания нового сообщения
-    new_message_subject = forms.CharField(
-        label="Тема нового сообщения",
-        required=False,
-        widget=forms.TextInput(
-            attrs={
-                "class": "form-control",
-                "placeholder": "Или создайте новое сообщение: введите тему",
-            }
-        ),
-        help_text="Если хотите создать новое сообщение, заполните это поле и поле ниже",
-    )
+    def clean(self):
+        cleaned_data = super().clean()
+        start_time = cleaned_data.get("start_time")
+        end_time = cleaned_data.get("end_time")
 
-    new_message_body = forms.CharField(
-        label="Содержание нового сообщения",
-        required=False,
-        widget=forms.Textarea(
-            attrs={
-                "class": "form-control",
-                "rows": 4,
-                "placeholder": "Введите содержимое письма",
-            }
-        ),
-    )
+        if start_time and end_time:
+            from django.utils import timezone
 
-    # Поля для создания нового получателя
-    new_recipient_username = forms.CharField(
-        label="ФИО нового получателя",
-        required=False,
-        widget=forms.TextInput(
-            attrs={
-                "class": "form-control",
-                "placeholder": "Или создайте нового получателя: введите ФИО",
-            }
-        ),
-        help_text="Если хотите создать нового получателя, заполните все три поля ниже",
-    )
+            if start_time < timezone.now():
+                raise forms.ValidationError(
+                    "Дата и время начала не может быть в прошлом."
+                )
 
-    new_recipient_email = forms.EmailField(
-        label="Email нового получателя",
-        required=False,
-        widget=forms.EmailInput(
-            attrs={"class": "form-control", "placeholder": "Введите email"}
-        ),
-    )
+            if start_time >= end_time:
+                raise forms.ValidationError(
+                    "Дата и время начала должна быть раньше даты окончания."
+                )
 
-    new_recipient_comment = forms.CharField(
-        label="Комментарий для нового получателя",
-        required=False,
-        widget=forms.Textarea(
-            attrs={
-                "class": "form-control",
-                "rows": 2,
-                "placeholder": "Введите комментарий",
-            }
-        ),
-    )
+        return cleaned_data
 
     class Meta:
         model = Mailing
         fields = "__all__"
-        exclude = [
-            "owner",
-            "status",
-        ]  # Владелец и статус устанавливаются автоматически в view
+        exclude = ["owner", "status"]
 
 
 class MessageForm(ModelForm):

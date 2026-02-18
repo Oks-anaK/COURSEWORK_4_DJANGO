@@ -1,6 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import (LoginRequiredMixin,
-                                        PermissionRequiredMixin)
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError
@@ -9,23 +8,24 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.cache import patch_response_headers
 from django.views import View
-from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
-                                  TemplateView, UpdateView)
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
 from .forms import MailingForm, MessageForm, RecipientForm
 from .models import Attempt, Mailing, Message, Recipient
 
 
-class OwnerOrManagerMixin:
-    """Mixin для проверки прав доступа - только владелец может редактировать/удалять"""
+class OwnerOrManagerMixin(LoginRequiredMixin):
+    """Mixin для проверки прав доступа - только владелец может редактировать/удалять."""
 
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
         obj = self.get_object()
         user = request.user
         is_manager = user.groups.filter(name="Менеджеры").exists()
 
         if not is_manager and obj.owner != user:
-            raise PermissionDenied("У вас нет прав для выполнения этого действия")
+            raise PermissionDenied("У вас нет прав для выполнения этого действия.")
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -58,7 +58,7 @@ class HomeView(TemplateView):
         return response
 
 
-class MailingListView(ListView):
+class MailingListView(LoginRequiredMixin, ListView):
     model = Mailing
     form_class = MailingForm
     template_name = "mailing/generic_list.html"
@@ -70,7 +70,7 @@ class MailingListView(ListView):
         return context
 
     def dispatch(self, request, *args, **kwargs):
-        # Исправляем NULL статусы ДО загрузки queryset
+        # Исправляем NULL статусы до загрузки queryset
         try:
             from django.db import connection
 
@@ -79,12 +79,11 @@ class MailingListView(ListView):
                     "UPDATE mailing_mailing SET status = 'Создана' WHERE status IS NULL"
                 )
         except Exception:
-            pass  # Игнорируем ошибки
+            pass
 
         try:
             response = super().dispatch(request, *args, **kwargs)
         except Exception as e:
-            # Если ошибка из-за NULL статуса, исправляем и пробуем снова
             from django.db import connection
 
             if isinstance(e, IntegrityError) and "status" in str(e):
@@ -108,13 +107,13 @@ class MailingListView(ListView):
         if not is_manager:
             queryset = queryset.filter(owner=user)
 
-        # Обновляем статусы для всех рассылок в списке
+        # Обновляем статусы
         for mailing in queryset:
             mailing.update_status()
         return queryset
 
 
-class MailingDetailView(DetailView):
+class MailingDetailView(LoginRequiredMixin, DetailView):
     model = Mailing
     form_class = MailingForm
     template_name = "mailing/mailing_detail.html"
@@ -153,59 +152,42 @@ class MailingDetailView(DetailView):
         return response
 
 
-class MailingCreateView(CreateView):
+class MailingCreateView(LoginRequiredMixin, CreateView):
     model = Mailing
     form_class = MailingForm
     template_name = "mailing/generic_form.html"
     success_url = reverse_lazy("mailing:mailing_list")
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["user"] = self.request.user
-        return kwargs
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        user = self.request.user
+        is_manager = user.groups.filter(name="Менеджеры").exists()
+
+        if is_manager:
+            form.fields["recipients"].queryset = Recipient.objects.all().order_by(
+                "username", "email"
+            )
+            form.fields["message"].queryset = Message.objects.all().order_by("subject")
+        else:
+            form.fields["recipients"].queryset = Recipient.objects.filter(
+                owner=user
+            ).order_by("username", "email")
+            form.fields["message"].queryset = Message.objects.filter(
+                owner=user
+            ).order_by("subject")
+
+        form.fields["recipients"].widget.attrs.update(
+            {"class": "form-control", "size": "10"}
+        )
+        return form
 
     def form_valid(self, form):
         mailing = form.save(commit=False)
         mailing.owner = self.request.user
-
-        # Устанавливаем статус по умолчанию, если он не установлен
         if not mailing.status:
             mailing.status = "Создана"
-
-        # Если заполнены поля для нового сообщения, создаем его
-        new_subject = form.cleaned_data.get("new_message_subject")
-        new_body = form.cleaned_data.get("new_message_body")
-
-        if new_subject and new_body:
-            # Создаем новое сообщение
-            new_message = Message.objects.create(
-                subject=new_subject, body=new_body, owner=self.request.user
-            )
-            # Привязываем новое сообщение к рассылке
-            mailing.message = new_message
-
-        # Сохраняем объект, чтобы получить ID для ManyToMany
         mailing.save()
-
-        # Сохраняем ManyToMany поля (recipients) - ВАЖНО: вызываем ДО добавления новых получателей
         form.save_m2m()
-
-        # Если заполнены поля для нового получателя, создаем его и добавляем к рассылке
-        new_username = form.cleaned_data.get("new_recipient_username")
-        new_email = form.cleaned_data.get("new_recipient_email")
-        new_comment = form.cleaned_data.get("new_recipient_comment")
-
-        if new_username and new_email and new_comment:
-            # Создаем нового получателя
-            new_recipient = Recipient.objects.create(
-                username=new_username,
-                email=new_email,
-                comment=new_comment,
-                owner=self.request.user,
-            )
-            # Добавляем нового получателя к рассылке
-            mailing.recipients.add(new_recipient)
-
         messages.success(self.request, "Рассылка успешно сохранена")
         return redirect(self.success_url)
 
@@ -216,48 +198,32 @@ class MailingUpdateView(OwnerOrManagerMixin, UpdateView):
     template_name = "mailing/generic_form.html"
     success_url = reverse_lazy("mailing:mailing_list")
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["user"] = self.request.user
-        return kwargs
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        user = self.request.user
+        is_manager = user.groups.filter(name="Менеджеры").exists()
+
+        if is_manager:
+            form.fields["recipients"].queryset = Recipient.objects.all().order_by(
+                "username", "email"
+            )
+            form.fields["message"].queryset = Message.objects.all().order_by("subject")
+        else:
+            form.fields["recipients"].queryset = Recipient.objects.filter(
+                owner=user
+            ).order_by("username", "email")
+            form.fields["message"].queryset = Message.objects.filter(
+                owner=user
+            ).order_by("subject")
+
+        form.fields["recipients"].widget.attrs.update(
+            {"class": "form-control", "size": "10"}
+        )
+        return form
 
     def form_valid(self, form):
-        mailing = form.save(commit=False)
-
-        # Если заполнены поля для нового сообщения, создаем его
-        new_subject = form.cleaned_data.get("new_message_subject")
-        new_body = form.cleaned_data.get("new_message_body")
-
-        if new_subject and new_body:
-            # Создаем новое сообщение
-            new_message = Message.objects.create(
-                subject=new_subject, body=new_body, owner=self.request.user
-            )
-            # Привязываем новое сообщение к рассылке
-            mailing.message = new_message
-
-        # Сохраняем объект, чтобы получить ID для ManyToMany
-        mailing.save()
-
-        # Сохраняем ManyToMany поля (recipients) - ВАЖНО: вызываем ДО добавления новых получателей
+        form.save()
         form.save_m2m()
-
-        # Если заполнены поля для нового получателя, создаем его и добавляем к рассылке
-        new_username = form.cleaned_data.get("new_recipient_username")
-        new_email = form.cleaned_data.get("new_recipient_email")
-        new_comment = form.cleaned_data.get("new_recipient_comment")
-
-        if new_username and new_email and new_comment:
-            # Создаем нового получателя
-            new_recipient = Recipient.objects.create(
-                username=new_username,
-                email=new_email,
-                comment=new_comment,
-                owner=self.request.user,
-            )
-            # Добавляем нового получателя к рассылке
-            mailing.recipients.add(new_recipient)
-
         messages.success(self.request, "Рассылка успешно обновлена")
         return redirect(self.success_url)
 
@@ -301,7 +267,6 @@ class MailingStartView(LoginRequiredMixin, View):
     def post(self, request, pk):
         mailing = get_object_or_404(Mailing, pk=pk)
 
-        # Проверяем права доступа - только владелец может запускать свою рассылку
         user = request.user
         is_manager = user.groups.filter(name="Менеджеры").exists()
 
@@ -312,7 +277,7 @@ class MailingStartView(LoginRequiredMixin, View):
         try:
             from mailing.services import start_mailing
 
-            # Запускаем рассылку с force=True, чтобы разрешить ручной запуск
+            # force=True, чтобы разрешить ручной запуск
             start_mailing(mailing, force=True)
             mailing.status = "Запущена"
             mailing.save()
@@ -325,7 +290,7 @@ class MailingStartView(LoginRequiredMixin, View):
         return redirect("mailing:mailing_detail", pk=pk)
 
 
-class MessageCreateView(CreateView):
+class MessageCreateView(LoginRequiredMixin, CreateView):
     model = Message
     form_class = MessageForm
     template_name = "mailing/generic_form.html"
@@ -345,7 +310,7 @@ class MessageUpdateView(OwnerOrManagerMixin, UpdateView):
     success_url = reverse_lazy("mailing:message_list")
 
 
-class MessageListView(ListView):
+class MessageListView(LoginRequiredMixin, ListView):
     model = Message
     form_class = MessageForm
     template_name = "mailing/generic_list.html"
@@ -373,7 +338,7 @@ class MessageListView(ListView):
         return response
 
 
-class MessageDetailView(DetailView):
+class MessageDetailView(LoginRequiredMixin, DetailView):
     model = Message
     form_class = MessageForm
     template_name = "mailing/message_detail.html"
@@ -400,7 +365,7 @@ class MessageDeleteView(OwnerOrManagerMixin, DeleteView):
         return context
 
 
-class RecipientCreateView(CreateView):
+class RecipientCreateView(LoginRequiredMixin, CreateView):
     model = Recipient
     form_class = RecipientForm
     template_name = "mailing/generic_form.html"
@@ -420,7 +385,7 @@ class RecipientUpdateView(OwnerOrManagerMixin, UpdateView):
     success_url = reverse_lazy("mailing:recipient_list")
 
 
-class RecipientListView(ListView):
+class RecipientListView(LoginRequiredMixin, ListView):
     model = Recipient
     form_class = RecipientForm
     template_name = "mailing/generic_list.html"
@@ -448,7 +413,7 @@ class RecipientListView(ListView):
         return response
 
 
-class RecipientDetailView(DetailView):
+class RecipientDetailView(LoginRequiredMixin, DetailView):
     model = Recipient
     form_class = RecipientForm
     template_name = "mailing/recipient_detail.html"
@@ -476,7 +441,7 @@ class RecipientDeleteView(OwnerOrManagerMixin, DeleteView):
 
 
 class StatisticsView(LoginRequiredMixin, TemplateView):
-    """Статистика по рассылкам"""
+    """Статистика по рассылкам."""
 
     template_name = "mailing/statistics.html"
 
