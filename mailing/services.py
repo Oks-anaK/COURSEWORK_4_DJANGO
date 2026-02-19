@@ -1,7 +1,6 @@
-from datetime import datetime
-
 from django.conf import settings
 from django.core.mail import send_mail
+from django.utils import timezone
 
 
 def update_status(start_time, end_time):
@@ -9,7 +8,7 @@ def update_status(start_time, end_time):
         if start_time >= end_time:
             raise Exception("Дата и время начала и окончания заданы неверно.")
 
-        now = datetime.now()
+        now = timezone.now()
 
         if now < start_time:
             return "Создана"
@@ -32,7 +31,7 @@ def start_mailing(mailing, force=False):
     # Импорт внутри функции для избежания циклического импорта
     from mailing.models import Attempt
 
-    now = datetime.now()
+    now = timezone.now()
 
     if not force and not (mailing.start_time <= now <= mailing.end_time):
         raise ValueError(

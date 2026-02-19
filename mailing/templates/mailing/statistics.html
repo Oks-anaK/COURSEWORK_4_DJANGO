@@ -17,10 +17,10 @@
                         <p class="card-text">Количество неуспешных попыток: <strong class="text-primary">{{ failed_attempts }}</strong></p>
                         <p class="card-text">Количество отправленных сообщений: <strong class="text-primary">{{ total_sent_messages }}</strong></p>
                         <p class="card-text">Всего попыток отправки: <strong class="text-primary">{{ total_attempts }}</strong></p>
-                        <div class="btn-group d-flex justify-content-center">
-                            <a class="btn btn-primary" href="{% url 'mailing:mailing_list' %}"
-                               role="button">Назад</a>
-                        </div>
+                               <div class="btn-group d-flex justify-content-center">
+                                   <a class="btn btn-primary" href="{% url 'mailing:home' %}"
+                                      role="button">Назад</a>
+                               </div>
                         <small class="text-body-secondary"></small>
                     </div>
                 </div>

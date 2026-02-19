@@ -31,13 +31,6 @@ class MailingForm(ModelForm):
         end_time = cleaned_data.get("end_time")
 
         if start_time and end_time:
-            from django.utils import timezone
-
-            if start_time < timezone.now():
-                raise forms.ValidationError(
-                    "Дата и время начала не может быть в прошлом."
-                )
-
             if start_time >= end_time:
                 raise forms.ValidationError(
                     "Дата и время начала должна быть раньше даты окончания."

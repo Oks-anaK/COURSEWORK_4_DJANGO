@@ -107,9 +107,6 @@ class MailingListView(LoginRequiredMixin, ListView):
         if not is_manager:
             queryset = queryset.filter(owner=user)
 
-        # Обновляем статусы
-        for mailing in queryset:
-            mailing.update_status()
         return queryset
 
 
@@ -134,7 +131,6 @@ class MailingDetailView(LoginRequiredMixin, DetailView):
         if not obj.status:
             obj.status = "Создана"
             obj.save(update_fields=["status"])
-        obj.update_status()  # пересчёт и сохранение статуса
         return obj
 
     def get_context_data(self, **kwargs):
@@ -222,7 +218,8 @@ class MailingUpdateView(OwnerOrManagerMixin, UpdateView):
         return form
 
     def form_valid(self, form):
-        form.save()
+        self.object = form.save(commit=False)
+        self.object.save()
         form.save_m2m()
         messages.success(self.request, "Рассылка успешно обновлена")
         return redirect(self.success_url)
