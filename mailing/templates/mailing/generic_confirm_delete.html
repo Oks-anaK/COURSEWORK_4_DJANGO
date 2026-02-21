@@ -1,0 +1,30 @@
+{% extends 'mailing/base.html' %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-8">
+            <form method="post" action="">
+                {% csrf_token %}
+                <div class="card" style="background-color: #e3f2fd;">
+                    <div class="card-body">
+                        <p class="card-text">
+                            {% if object.subject %}
+                                Вы действительно хотите удалить {{ object.subject }}?  {# Для Message #}
+                            {% elif object.email %}
+                                Вы действительно хотите удалить {{ object.full_name }} ({{ object.email }})?  {# Для Recipient #}
+                            {% else %}
+                                Вы действительно хотите удалить {{ object }}?  {# Для Mailing или общий fallback #}
+                            {% endif %}
+                        </p>
+                        <div class="btn-group mt-3" role="group" aria-label="Basic mixed styles">
+                            <button type="submit" class="btn btn-danger">Удалить</button>
+                            <a class="btn btn-light" href="{% url view_name|add:'_list' %}"
+                               role="button">Отменить</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

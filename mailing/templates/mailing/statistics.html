@@ -1,0 +1,31 @@
+{% extends 'mailing/base.html' %}
+{% load my_tags %}
+{% block content %}
+<div class="album py-5 bg-body-tertiary">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="text-center">Статистика</h1>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <div class="card shadow-sm" style="background-color: #e3f2fd;">
+                    <div class="card-body">
+                        <p class="card-text">Общее количество рассылок: <strong class="text-primary">{{ total_mailings }}</strong></p>
+                        <p class="card-text">Количество успешных попыток: <strong class="text-primary">{{ successful_attempts }}</strong></p>
+                        <p class="card-text">Количество неуспешных попыток: <strong class="text-primary">{{ failed_attempts }}</strong></p>
+                        <p class="card-text">Количество отправленных сообщений: <strong class="text-primary">{{ total_sent_messages }}</strong></p>
+                        <p class="card-text">Всего попыток отправки: <strong class="text-primary">{{ total_attempts }}</strong></p>
+                               <div class="btn-group d-flex justify-content-center">
+                                   <a class="btn btn-primary" href="{% url 'mailing:home' %}"
+                                      role="button">Назад</a>
+                               </div>
+                        <small class="text-body-secondary"></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'mailing/base.html' %}
+{% load my_tags %}
+
+{% block content %}
+<div class="album py-5 bg-body-tertiary">
+    <div class="container">
+        {% if create_url and view_name != 'mailing:mailing' %}
+        <div class="row mb-3">
+            <div class="col">
+                <a href="{% url create_url %}" class="btn btn-primary">
+                    {% if view_name == 'mailing:message' %}
+                        Создать сообщение
+                    {% elif view_name == 'mailing:recipient' %}
+                        Создать получателя
+                    {% else %}
+                        Создать
+                    {% endif %}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        <div class="row row-cols-1 row-col">
+            {% for object in object_list %}
+                <div class="col">
+                    <div class="card shadow-sm" style="background-color: #e3f2fd;">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                {% if object.subject %}
+                                    <strong class="text-primary">{{ object.subject }}</strong>  {# Для Message #}
+                                {% elif object.email %}
+                                    <strong class="text-primary">{{ object.full_name }} ({{ object.email }})</strong>  {# Для Recipient #}
+                                {% elif object.message %}
+                                    <strong class="text-primary">{{ object.message.subject }}</strong>  {# Для Mailing - показываем тему сообщения #}
+                                {% else %}
+                                    <strong class="text-primary">Рассылка #{{ object.pk }}</strong>  {# Для Mailing без сообщения #}
+                                {% endif %}
+                            </h5>
+
+                            <p class="card-text">
+                                {% if object.body %}
+                                    {{ object.body|truncatewords:20 }}  {# Для Message #}
+                                {% elif object.comment %}
+                                    {{ object.comment|truncatewords:20 }}  {# Для Recipient #}
+                                {% elif object.message %}
+                                    <strong>Статус:</strong> {{ object.status|default:"Не указан" }}<br>
+                                    <strong>Сообщение:</strong> {{ object.message.subject }}<br>
+                                    {% if object.recipients.all %}
+                                        <strong>Получателей:</strong> <strong class="text-primary">{{ object.recipients.all|length }}</strong>
+                                    {% else %}
+                                        <strong>Получателей:</strong> <strong class="text-primary">0</strong>
+                                    {% endif %}
+                                {% endif %}
+                            </p>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <a href="{% url view_name|add:'_detail' object.pk %}"
+                                       class="btn btn-sm btn-outline-secondary">
+                                        Просмотр
+                                    </a>
+
+                                    {% if object.owner == user %}
+                                        <a href="{% url view_name|add:'_update' object.pk %}"
+                                           class="btn btn-sm btn-outline-secondary">
+                                            Редактировать
+                                        </a>
+                                        <a href="{% url view_name|add:'_delete' object.pk %}"
+                                           class="btn btn-sm btn-outline-danger">
+                                            Удалить
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col">
+                    <p class="text-center">Список пуст</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

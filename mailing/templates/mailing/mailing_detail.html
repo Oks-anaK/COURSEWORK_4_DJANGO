@@ -1,0 +1,86 @@
+{% extends 'mailing/base.html' %}
+{% load my_tags %}
+{% block content %}
+<div class="album py-5 bg-body-tertiary">
+    <div class="container">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+            <div class="col">
+                <div class="card shadow-sm" style="background-color: #e3f2fd;">
+                    <div class="card-body">
+                        <h5>Информация</h5>
+                        <p class="card-text">Статус: {{ object.status|default:"Не указан" }}</p>
+                        {% if object.message %}
+                        <p class="card-text"><strong>Сообщение:</strong> {{ object.message.subject }}</p>
+                        {% else %}
+                        <p class="card-text text-muted">Сообщение не добавлено</p>
+                        {% endif %}
+                        {% if object.recipients.all %}
+                        <p class="card-text">
+                            <strong>Получатели:</strong>
+                            <ul class="list-unstyled ms-3">
+                                {% for recipient in object.recipients.all %}
+                                    <li>• {{ recipient }}</li>
+                                {% endfor %}
+                            </ul>
+                        </p>
+                        {% else %}
+                        <p class="card-text text-muted">Получатели не добавлены</p>
+                        {% endif %}
+                        <p class="card-text">{{ object.start_time }}</p>
+                        <p class="card-text">{{ object.end_time }}</p>
+                        <hr>
+                        <div class="d-flex flex-wrap mb-3" style="gap: 0.5rem;">
+                            {% if object.owner == user %}
+                                <a class="btn btn-primary btn-sm" href="{% url 'mailing:mailing_update' object.pk %}"
+                                   role="button">Редактировать</a>
+                            {% endif %}
+                            {% if object.owner == user and object.status != 'Запущена' and object.status != 'Завершена' %}
+                                <form method="post" action="{% url 'mailing:mailing_start' object.pk %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm">Запустить рассылку</button>
+                                </form>
+                            {% endif %}
+                            {% if object.owner == user %}
+                                <a class="btn btn-danger btn-sm" href="{% url 'mailing:mailing_delete' object.pk %}"
+                                   role="button">Удалить</a>
+                            {% endif %}
+                            {% if is_manager and object.owner != user %}
+                                <form method="post" action="{% url 'mailing:mailing_disable' object.pk %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-warning btn-sm">Отключить рассылку</button>
+                                </form>
+                            {% endif %}
+                            <a class="btn btn-outline-secondary btn-sm" href="{% url 'mailing:mailing_list' %}"
+                               role="button">Назад</a>
+                        </div>
+                        <h5>История попыток отправки</h5>
+                        {% for attempt in attempts %}
+                        <div class="card mb-3" style="background-color: #e3f2fd;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>Дата:</strong> {{ attempt.attempt_time|date:"d.m.Y H:i:s" }}<br>
+                                        <strong>Статус:</strong>
+                                        <span class="badge {% if attempt.status == 'Успешно' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ attempt.status }}
+                                        </span>
+                                    </div>
+                                </div>
+                                {% if attempt.server_response %}
+                                <div class="mt-2">
+                                    <strong>Ответ сервера:</strong>
+                                    <pre class="bg-light p-2 rounded"><small>{{ attempt.server_response }}</small></pre>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">Попыток отправки пока нет</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
